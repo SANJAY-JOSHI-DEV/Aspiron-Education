@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Aspiron Education</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 30px 25px;
+      width: 100%;
+      max-width: 380px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    input::placeholder { color: #94a3b8; }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      color: #fff;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .toggle {
+      text-align: center;
+      color: #93c5fd;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    #message {
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="formTitle">Login</h2>
+    <input type="email" id="email" placeholder="Email address">
+    <input type="password" id="password" placeholder="Password">
+    <button id="actionBtn">Login</button>
+    <p class="toggle" id="toggleText">Naya account banao? Sign Up</p>
+    <p id="message"></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBm1L2DJvTFOfyVBc0a7F89dCvhO8PlwC0",
+      authDomain: "aspiron-education-demo.firebaseapp.com",
+      projectId: "aspiron-education-demo",
+      storageBucket: "aspiron-education-demo.firebasestorage.app",
+      messagingSenderId: "620319488597",
+      appId: "1:620319488597:web:822f9c1b2f2f78e0a6f2dc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    let isLogin = true;
+
+    const formTitle = document.getElementById("formTitle");
+    const actionBtn = document.getElementById("actionBtn");
+    const toggleText = document.getElementById("toggleText");
+    const message = document.getElementById("message");
+
+    toggleText.addEventListener("click", () => {
+      isLogin = !isLogin;
+      formTitle.textContent = isLogin ? "Login" : "Sign Up";
+      actionBtn.textContent = isLogin ? "Login" : "Sign Up";
+      toggleText.textContent = isLogin ? "Naya account banao? Sign Up" : "Pehle se account hai? Login";
+      message.textContent = "";
+    });
+
+    actionBtn.addEventListener("click", () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        message.textContent = "Email aur password dono bharo";
+        message.style.color = "#f87171";
+        return;
+      }
+
+      if (isLogin) {
+        signInWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            message.style.color = "#4ade80";
+            message.textContent = "Login successful! Redirecting...";
+            setTimeout(() => window.location.href = "index.html", 1000);
+          })
+          .catch((error) => {
+            message.style.color = "#f87171";
+            message.textContent = "Error: " + error.message;
+          });
+      } else {
+        createUserWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            message.style.color = "#4ade80";
+            message.textContent = "Account bana! Redirecting...";
+            setTimeout(() => window.location.href = "index.html", 1000);
+          })
+          .catch((error) => {
+            message.style.color = "#f87171";
+            message.textContent = "Error: " + error.message;
+          });
+      }
+    });
+  </script>
+</body>
+</html>
