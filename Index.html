@@ -40,5 +40,25 @@
   <h1>Aspiron Education</h1>
   <p>NEET & JEE ki complete taiyari — ek hi jagah</p>
   <div class="badge">🚀 Coming Soon</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBm1L2DJvTFOfyVBc0a7F89dCvhO8PlwC0",
+      authDomain: "aspiron-education-demo.firebaseapp.com",
+      projectId: "aspiron-education-demo",
+      storageBucket: "aspiron-education-demo.firebasestorage.app",
+      messagingSenderId: "620319488597",
+      appId: "1:620319488597:web:822f9c1b2f2f78e0a6f2dc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    console.log("Firebase connected successfully!");
+  </script>
 </body>
 </html>
