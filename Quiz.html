@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock Test - Aspiron Education</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .back {
+      align-self: flex-start;
+      color: #93c5fd;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+    .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 25px 20px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .progress {
+      text-align: center;
+      color: #93c5fd;
+      font-size: 0.85rem;
+      margin-bottom: 15px;
+    }
+    .question {
+      font-size: 1.05rem;
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+    .option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .option.selected {
+      border-color: #60a5fa;
+      background: rgba(96,165,250,0.2);
+    }
+    .option.correct {
+      border-color: #4ade80;
+      background: rgba(74,222,128,0.2);
+    }
+    .option.wrong {
+      border-color: #f87171;
+      background: rgba(248,113,113,0.2);
+    }
+    button.nextBtn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      color: #fff;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .result {
+      text-align: center;
+    }
+    .result h2 {
+      font-size: 1.6rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .result p { color: #cbd5e1; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back">&larr; Back to Home</a>
+  <div class="card" id="quizCard">
+    <div class="progress" id="progress"></div>
+    <div class="question" id="questionText"></div>
+    <div id="optionsBox"></div>
+    <button class="nextBtn" id="nextBtn" style="display:none;">Next</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        q: "Powerhouse of the cell kaha jaata hai?",
+        options: ["Nucleus", "Mitochondria", "Ribosome", "Golgi body"],
+        answer: 1
+      },
+      {
+        q: "DNA ka full form kya hai?",
+        options: ["Deoxyribonucleic Acid", "Dinucleic Acid", "Deoxyribose Nuclear Acid", "Diribonucleic Acid"],
+        answer: 0
+      },
+      {
+        q: "Photosynthesis kis organelle me hoti hai?",
+        options: ["Mitochondria", "Nucleus", "Chloroplast", "Vacuole"],
+        answer: 2
+      },
+      {
+        q: "Insaan ke sharir me kitni haddiyan hoti hain (adult)?",
+        options: ["186", "206", "216", "196"],
+        answer: 1
+      },
+      {
+        q: "Blood ka laal rang kis pigment ki wajah se hota hai?",
+        options: ["Chlorophyll", "Melanin", "Hemoglobin", "Keratin"],
+        answer: 2
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let answered = false;
+
+    const questionText = document.getElementById("questionText");
+    const optionsBox = document.getElementById("optionsBox");
+    const progress = document.getElementById("progress");
+    const nextBtn = document.getElementById("nextBtn");
+    const quizCard = document.getElementById("quizCard");
+
+    function loadQuestion() {
+      answered = false;
+      nextBtn.style.display = "none";
+      const q = questions[current];
+      progress.textContent = `Question ${current + 1} of ${questions.length}`;
+      questionText.textContent = q.q;
+      optionsBox.innerHTML = "";
+
+      q.options.forEach((opt, index) => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = opt;
+        btn.addEventListener("click", () => selectAnswer(index, btn));
+        optionsBox.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(index, btn) {
+      if (answered) return;
+      answered = true;
+      const q = questions[current];
+      const allOptions = document.querySelectorAll(".option");
+
+      allOptions.forEach((opt, i) => {
+        if (i === q.answer) opt.classList.add("correct");
+        else if (i === index) opt.classList.add("wrong");
+      });
+
+      if (index === q.answer) score++;
+      nextBtn.style.display = "block";
+      nextBtn.textContent = (current === questions.length - 1) ? "See Result" : "Next";
+    }
+
+    nextBtn.addEventListener("click", () => {
+      current++;
+      if (current < questions.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    });
+
+    function showResult() {
+      quizCard.innerHTML = `
+        <div class="result">
+          <h2>Test Complete!</h2>
+          <p>Aapka Score: ${score} / ${questions.length}</p>
+          <button class="nextBtn" onclick="window.location.href='index.html'">Back to Home</button>
+        </div>
+      `;
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
