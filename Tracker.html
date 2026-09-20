@@ -230,7 +230,14 @@
           });
         });
       }
-      render();
+      try {render();
+      } catch (err) {
+        document.getElementById("message").textContent = "ERROR: " + err.message;
+        console.error(err);
+      }
+    }
+
+    async function saveTracker() {
       
    async function saveTracker() {
       await setDoc(doc(db, "trackers", currentUser.uid), trackerData);
