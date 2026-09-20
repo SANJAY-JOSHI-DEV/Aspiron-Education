@@ -4,113 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aspiron Education</title>
+  <link rel="stylesheet" href="theme.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 20px;
-    }
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, #a78bfa, #60a5fa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    p { color: #cbd5e1; font-size: 1rem; }
-    .badge {
-      margin-top: 30px;
-      padding: 10px 20px;
-      border: 1px solid #60a5fa;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      color: #93c5fd;
-    }
+    body { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+    .tagline { color:var(--txt2); font-size:1rem; margin-bottom:24px; }
+    .btnStack { display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; }
+    .btnStack a { text-decoration:none; width:100%; }
+    .btnStack button { width:100%; }
   </style>
 </head>
 <body>
+  <div id="themeToggleBar"></div>
+
   <h1>Aspiron Education</h1>
-  <p>NEET & JEE ki complete taiyari — ek hi jagah</p>
-  <div class="badge">🚀 Coming Soon</div>
-  <a href="login.html" style="text-decoration:none;">
-    <button style="
-      margin-top: 20px;
-      padding: 12px 30px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(90deg, #a78bfa, #60a5fa);
-      color: #fff;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-    ">Login / Sign Up</button>
-  </a>
-  <a href="study.html" style="text-decoration:none;">
-    <button style="
-      margin-top: 12px;
-      padding: 12px 30px;
-      border: 1px solid #60a5fa;
-      border-radius: 8px;
-      background: transparent;
-      color: #93c5fd;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-    ">📚 Study Material</button>
-  </a>
-  <a href="quiz.html" style="text-decoration:none;">
-    <button style="
-      margin-top: 12px;
-      padding: 12px 30px;
-      border: 1px solid #4ade80;
-      border-radius: 8px;
-      background: transparent;
-      color: #86efac;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-    ">📝 Mock Test</button>
-  </a>
-  <a href="countdown.html" style="text-decoration:none;">
-    <button style="
-      margin-top: 12px;
-      padding: 12px 30px;
-      border: 1px solid #fbbf24;
-      border-radius: 8px;
-      background: transparent;
-      color: #fcd34d;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-    ">⏰ My Countdown</button>
-  </a>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <p class="tagline">NEET & JEE ki complete taiyari — ek hi jagah</p>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBm1L2DJvTFOfyVBc0a7F89dCvhO8PlwC0",
-      authDomain: "aspiron-education-demo.firebaseapp.com",
-      projectId: "aspiron-education-demo",
-      storageBucket: "aspiron-education-demo.firebasestorage.app",
-      messagingSenderId: "620319488597",
-      appId: "1:620319488597:web:822f9c1b2f2f78e0a6f2dc"
-    };
+  <div class="btnStack">
+    <a href="login.html"><button>Login / Sign Up</button></a>
+    <a href="study.html"><button class="btn-outline">📚 Study Material</button></a>
+    <a href="quiz.html"><button class="btn-outline">📝 Mock Test</button></a>
+    <a href="countdown.html"><button class="btn-outline">⏰ My Countdown</button></a>
+    <a href="tracker.html"><button class="btn-outline">📊 Study Tracker</button></a>
+  </div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    console.log("Firebase connected successfully!");
-  </script>
+  <script src="theme.js"></script>
 </body>
 </html>
