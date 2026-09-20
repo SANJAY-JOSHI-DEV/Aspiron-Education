@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown - Aspiron Education</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .back {
+      align-self: flex-start;
+      color: #93c5fd;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 25px 20px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    label {
+      font-size: 0.85rem;
+      color: #93c5fd;
+      display: block;
+      margin-bottom: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      color: #fff;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .display {
+      text-align: center;
+    }
+    .display h2 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      color: #fff;
+    }
+    .timer {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+    .box {
+      background: rgba(96,165,250,0.15);
+      border: 1px solid #60a5fa;
+      border-radius: 10px;
+      padding: 12px 10px;
+      min-width: 60px;
+    }
+    .box .num { font-size: 1.5rem; font-weight: bold; }
+    .box .label { font-size: 0.7rem; color: #93c5fd; }
+    .editBtn {
+      background: transparent;
+      border: 1px solid #93c5fd;
+      color: #93c5fd;
+      margin-top: 10px;
+    }
+    #message { text-align: center; font-size: 0.85rem; margin-top: 10px; color: #f87171; }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back">&larr; Back to Home</a>
+  <h1>My Exam Countdown</h1>
+
+  <div class="card" id="setupCard">
+    <label>Exam Name</label>
+    <input type="text" id="examName" placeholder="e.g. NEET 2027">
+    <label>Exam Date</label>
+    <input type="date" id="examDate">
+    <label>Exam Time</label>
+    <input type="time" id="examTime">
+    <button id="saveBtn">Save Countdown</button>
+    <p id="message"></p>
+  </div>
+
+  <div class="card display" id="displayCard" style="display:none;">
+    <h2 id="displayName"></h2>
+    <div class="timer" id="timerBox"></div>
+    <button class="editBtn" id="editBtn">Edit / Change Exam</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBm1L2DJvTFOfyVBc0a7F89dCvhO8PlwC0",
+      authDomain: "aspiron-education-demo.firebaseapp.com",
+      projectId: "aspiron-education-demo",
+      storageBucket: "aspiron-education-demo.firebasestorage.app",
+      messagingSenderId: "620319488597",
+      appId: "1:620319488597:web:822f9c1b2f2f78e0a6f2dc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const setupCard = document.getElementById("setupCard");
+    const displayCard = document.getElementById("displayCard");
+    const message = document.getElementById("message");
+    let countdownInterval;
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        loadCountdown();
+      } else {
+        message.textContent = "Pehle Login karo countdown set karne ke liye";
+        document.getElementById("saveBtn").disabled = true;
+      }
+    });
+
+    async function loadCountdown() {
+      const docRef = doc(db, "countdowns", currentUser.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        showDisplay(data.examName, data.examDateTime);
+      } else {
+        const profileRef = doc(db, "profiles", currentUser.uid);
+        const profileSnap = await getDoc(profileRef);
+        if (profileSnap.exists()) {
+          const profile = profileSnap.data();
+          document.getElementById("examName").value = profile.examType;
+        }
+      }
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      const name = document.getElementById("examName").value;
+      const date = document.getElementById("examDate").value;
+      const time = document.getElementById("examTime").value || "09:00";
+
+      if (!name || !date) {
+        message.textContent = "Exam naam aur date dono bharo";
+        return;
+      }
+      if (!currentUser) {
+        message.textContent = "Pehle Login karo";
+        return;
+      }
+
+      const examDateTime = `${date}T${time}:00`;
+
+      await setDoc(doc(db, "countdowns", currentUser.uid), {
+        examName: name,
+        examDateTime: examDateTime
+      });
+
+      showDisplay(name, examDateTime);
+    });
+
+    document.getElementById("editBtn").addEventListener("click", () => {
+      clearInterval(countdownInterval);
+      displayCard.style.display = "none";
+      setupCard.style.display = "block";
+    });
+
+    function showDisplay(name, dateTimeStr) {
+      setupCard.style.display = "none";
+      displayCard.style.display = "block";
+      document.getElementById("displayName").textContent = name;
+
+      const target = new Date(dateTimeStr).getTime();
+
+      function update() {
+        const now = new Date().getTime();
+        const diff = target - now;
+
+        if (diff <= 0) {
+          document.getElementById("timerBox").innerHTML = "<p style='font-size:1.2rem;'>Exam aa gaya! All the best! 🎯</p>";
+          clearInterval(countdownInterval);
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById("timerBox").innerHTML = `
+          <div class="box"><div class="num">${days}</div><div class="label">Days</div></div>
+          <div class="box"><div class="num">${hours}</div><div class="label">Hours</div></div>
+          <div class="box"><div class="num">${minutes}</div><div class="label">Min</div></div>
+          <div class="box"><div class="num">${seconds}</div><div class="label">Sec</div></div>
+        `;
+      }
+
+      update();
+      countdownInterval = setInterval(update, 1000);
+    }
+  </script>
+</body>
+</html>
