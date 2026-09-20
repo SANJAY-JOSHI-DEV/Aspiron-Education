@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Tracker - Aspiron Education</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .back {
+      display: inline-block;
+      color: #93c5fd;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .addWeekBox {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .addWeekBox input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+    .addWeekBox button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .weekCard {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .weekHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .weekHeader h3 { color: #93c5fd; font-size: 1.05rem; }
+    .delBtn {
+      background: rgba(248,113,113,0.15);
+      border: 1px solid #f87171;
+      color: #f87171;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .subjectRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .addSubjectBox {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .addSubjectBox input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 0.85rem;
+    }
+    .addSubjectBox button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(96,165,250,0.3);
+      border: 1px solid #60a5fa;
+      color: #fff;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    #message { text-align: center; font-size: 0.85rem; margin: 10px 0; color: #f87171; }
+    .empty { text-align: center; color: #94a3b8; font-size: 0.9rem; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back">&larr; Back to Home</a>
+  <h1>My Study Tracker</h1>
+
+  <div class="addWeekBox">
+    <input type="text" id="newWeekName" placeholder="e.g. Week 1">
+    <button id="addWeekBtn">+ Add Week</button>
+  </div>
+  <p id="message"></p>
+
+  <div id="weeksContainer"></div>
+  <p class="empty" id="emptyMsg" style="display:none;">Koi week nahi bana abhi tak. Upar se add karo!</p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBm1L2DJvTFOfyVBc0a7F89dCvhO8PlwC0",
+      authDomain: "aspiron-education-demo.firebaseapp.com",
+      projectId: "aspiron-education-demo",
+      storageBucket: "aspiron-education-demo.firebasestorage.app",
+      messagingSenderId: "620319488597",
+      appId: "1:620319488597:web:822f9c1b2f2f78e0a6f2dc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let trackerData = { weeks: [] };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        loadTracker();
+      } else {
+        document.getElementById("message").textContent = "Pehle login karo tracker use karne ke liye";
+      }
+    });
+
+    async function loadTracker() {
+      const docRef = doc(db, "trackers", currentUser.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        trackerData = docSnap.data();
+        if (!trackerData.weeks) trackerData.weeks = [];
+      }
+      render();
+    }
+
+    async function saveTracker() {
+      await setDoc(doc(db, "trackers", currentUser.uid), trackerData);
+    }
+
+    document.getElementById("addWeekBtn").addEventListener("click", () => {
+      const input = document.getElementById("newWeekName");
+      const name = input.value.trim();
+      const message = document.getElementById("message");
+
+      if (!name) {
+        message.textContent = "Week ka naam likho";
+        return;
+      }
+      if (!currentUser) {
+        message.textContent = "Pehle login karo";
+        return;
+      }
+
+      trackerData.weeks.push({
+        id: Date.now().toString(),
+        name: name,
+        subjects: []
+      });
+
+      input.value = "";
+      message.textContent = "";
+      saveTracker();
+      render();
+    });
+
+    function addSubject(weekId) {
+      const input = document.getElementById("subjInput-" + weekId);
+      const name = input.value.trim();
+      if (!name) return;
+
+      const week = trackerData.weeks.find(w => w.id === weekId);
+      week.subjects.push({
+        id: D
