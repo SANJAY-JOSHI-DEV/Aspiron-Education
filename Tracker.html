@@ -165,3 +165,104 @@
     async function saveTracker() {
       await setDoc(doc(db, "trackers", currentUser.uid), trackerData);
     }
+    document.getElementById("addWeekBtn").addEventListener("click", () => {
+      const input = document.getElementById("newWeekName");
+      const name = input.value.trim();
+      const message = document.getElementById("message");
+
+      if (!name) {
+        message.textContent = "Week ka naam likho";
+        return;
+      }
+      if (!currentUser) {
+        message.textContent = "Pehle login karo";
+        return;
+      }
+
+      trackerData.weeks.push({
+        id: Date.now().toString(),
+        name: name,
+        subjects: []
+      });
+
+      input.value = "";
+      message.textContent = "";
+      saveTracker();
+      render();
+    });
+
+    function addSubject(weekId) {
+      const input = document.getElementById("subjInput-" + weekId);
+      const name = input.value.trim();
+      if (!name) return;
+
+      const week = trackerData.weeks.find(w => w.id === weekId);
+      week.subjects.push({
+        id: Date.now().toString(),
+        name: name,
+        chapters: []
+      });
+
+      saveTracker();
+      render();
+    }
+    function deleteWeek(weekId) {
+      trackerData.weeks = trackerData.weeks.filter(w => w.id !== weekId);
+      saveTracker();
+      render();
+    }
+
+    function deleteSubject(weekId, subjectId) {
+      const week = trackerData.weeks.find(w => w.id === weekId);
+      week.subjects = week.subjects.filter(s => s.id !== subjectId);
+      saveTracker();
+      render();
+    }
+
+    function render() {
+      const container = document.getElementById("weeksContainer");
+      const emptyMsg = document.getElementById("emptyMsg");
+      container.innerHTML = "";
+
+      if (trackerData.weeks.length === 0) {
+        emptyMsg.style.display = "block";
+        return;
+      }
+      emptyMsg.style.display = "none";
+
+      trackerData.weeks.forEach(week => {
+        const weekDiv = document.createElement("div");
+        weekDiv.className = "weekCard";
+
+        let subjectsHtml = "";
+        week.subjects.forEach(subj => {
+          subjectsHtml += `
+            <div class="subjectRow">
+              <span>📘 ${subj.name}</span>
+              <button class="delBtn" onclick="window.deleteSubject('${week.id}','${subj.id}')">Remove</button>
+            </div>
+          `;
+        });
+
+        weekDiv.innerHTML = `
+          <div class="weekHeader">
+            <h3>${week.name}</h3>
+            <button class="delBtn" onclick="window.deleteWeek('${week.id}')">Delete Week</button>
+          </div>
+          ${subjectsHtml}
+          <div class="addSubjectBox">
+            <input type="text" id="subjInput-${week.id}" placeholder="Subject name (e.g. Physics)">
+            <button onclick="window.addSubject('${week.id}')">+ Add</button>
+          </div>
+        `;
+
+        container.appendChild(weekDiv);
+      });
+    }
+
+    window.addSubject = addSubject;
+    window.deleteWeek = deleteWeek;
+    window.deleteSubject = deleteSubject;
+  </script>
+</body>
+</html>
