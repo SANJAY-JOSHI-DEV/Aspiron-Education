@@ -72,22 +72,35 @@
       font-size: 0.75rem;
       cursor: pointer;
     }
+    .subjectBlock {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
     .subjectRow {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(255,255,255,0.05);
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 8px;
       font-size: 0.9rem;
+      cursor: pointer;
     }
-    .addSubjectBox {
+    .chapterRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.06);
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-top: 6px;
+      font-size: 0.82rem;
+    }
+    .addSubjectBox, .addChapterBox {
       display: flex;
       gap: 6px;
       margin-top: 10px;
     }
-    .addSubjectBox input {
+    .addSubjectBox input, .addChapterBox input {
       flex: 1;
       padding: 8px;
       border-radius: 6px;
@@ -96,7 +109,7 @@
       color: #fff;
       font-size: 0.85rem;
     }
-    .addSubjectBox button {
+    .addSubjectBox button, .addChapterBox button {
       padding: 8px 12px;
       border: none;
       border-radius: 6px;
@@ -200,12 +213,14 @@
       week.subjects.push({
         id: Date.now().toString(),
         name: name,
+        expanded: false,
         chapters: []
       });
 
       saveTracker();
       render();
     }
+
     function deleteWeek(weekId) {
       trackerData.weeks = trackerData.weeks.filter(w => w.id !== weekId);
       saveTracker();
@@ -218,7 +233,36 @@
       saveTracker();
       render();
     }
+    function toggleSubject(weekId, subjectId) {
+      const week = trackerData.weeks.find(w => w.id === weekId);
+      const subject = week.subjects.find(s => s.id === subjectId);
+      subject.expanded = !subject.expanded;
+      render();
+    }
 
+    function addChapter(weekId, subjectId) {
+      const input = document.getElementById("chapInput-" + weekId + "-" + subjectId);
+      const name = input.value.trim();
+      if (!name) return;
+
+      const week = trackerData.weeks.find(w => w.id === weekId);
+      const subject = week.subjects.find(s => s.id === subjectId);
+      subject.chapters.push({
+        id: Date.now().toString(),
+        name: name
+      });
+
+      saveTracker();
+      render();
+    }
+
+    function deleteChapter(weekId, subjectId, chapterId) {
+      const week = trackerData.weeks.find(w => w.id === weekId);
+      const subject = week.subjects.find(s => s.id === subjectId);
+      subject.chapters = subject.chapters.filter(c => c.id !== chapterId);
+      saveTracker();
+      render();
+    }
     function render() {
       const container = document.getElementById("weeksContainer");
       const emptyMsg = document.getElementById("emptyMsg");
@@ -236,10 +280,32 @@
 
         let subjectsHtml = "";
         week.subjects.forEach(subj => {
+          let chaptersHtml = "";
+          subj.chapters.forEach(chap => {
+            chaptersHtml += `
+              <div class="chapterRow">
+                <span>📖 ${chap.name}</span>
+                <button class="delBtn" onclick="window.deleteChapter('${week.id}','${subj.id}','${chap.id}')">Remove</button>
+              </div>
+            `;
+          });
+
+          const arrow = subj.expanded ? "▼" : "▶";
+          const chapterSection = subj.expanded ? `
+            ${chaptersHtml}
+            <div class="addChapterBox">
+              <input type="text" id="chapInput-${week.id}-${subj.id}" placeholder="Chapter name">
+              <button onclick="window.addChapter('${week.id}','${subj.id}')">+ Add</button>
+            </div>
+          ` : "";
+
           subjectsHtml += `
-            <div class="subjectRow">
-              <span>📘 ${subj.name}</span>
-              <button class="delBtn" onclick="window.deleteSubject('${week.id}','${subj.id}')">Remove</button>
+            <div class="subjectBlock">
+              <div class="subjectRow" onclick="window.toggleSubject('${week.id}','${subj.id}')">
+                <span>${arrow} 📘 ${subj.name}</span>
+                <button class="delBtn" onclick="event.stopPropagation(); window.deleteSubject('${week.id}','${subj.id}')">Remove</button>
+              </div>
+              ${chapterSection}
             </div>
           `;
         });
@@ -263,6 +329,9 @@
     window.addSubject = addSubject;
     window.deleteWeek = deleteWeek;
     window.deleteSubject = deleteSubject;
+    window.toggleSubject = toggleSubject;
+    window.addChapter = addChapter;
+    window.deleteChapter = deleteChapter;
   </script>
 </body>
 </html>
