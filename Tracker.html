@@ -85,15 +85,49 @@
       font-size: 0.9rem;
       cursor: pointer;
     }
+    .chapterBlock {
+      background: rgba(255,255,255,0.06);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-top: 6px;
+    }
     .chapterRow {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(255,255,255,0.06);
-      border-radius: 6px;
-      padding: 6px 10px;
-      margin-top: 6px;
       font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .taskRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      margin-top: 5px;
+      font-size: 0.8rem;
+      background: rgba(255,255,255,0.04);
+      border-radius: 5px;
+    }
+    .taskRow.done span.taskLabel {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+    .doneTag {
+      background: rgba(74,222,128,0.2);
+      color: #4ade80;
+      border: 1px solid #4ade80;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+    }
+    .notDoneBtn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #cbd5e1;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      cursor: pointer;
     }
     .addSubjectBox, .addChapterBox {
       display: flex;
@@ -117,6 +151,16 @@
       border: 1px solid #60a5fa;
       color: #fff;
       font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .addRevBtn {
+      margin-top: 6px;
+      padding: 5px 10px;
+      border: 1px dashed #93c5fd;
+      background: transparent;
+      color: #93c5fd;
+      border-radius: 6px;
+      font-size: 0.75rem;
       cursor: pointer;
     }
     #message { text-align: center; font-size: 0.85rem; margin: 10px 0; color: #f87171; }
@@ -233,13 +277,13 @@
       saveTracker();
       render();
     }
+
     function toggleSubject(weekId, subjectId) {
       const week = trackerData.weeks.find(w => w.id === weekId);
       const subject = week.subjects.find(s => s.id === subjectId);
       subject.expanded = !subject.expanded;
       render();
     }
-
     function addChapter(weekId, subjectId) {
       const input = document.getElementById("chapInput-" + weekId + "-" + subjectId);
       const name = input.value.trim();
@@ -249,7 +293,11 @@
       const subject = week.subjects.find(s => s.id === subjectId);
       subject.chapters.push({
         id: Date.now().toString(),
-        name: name
+        name: name,
+        expanded: false,
+        lectureDone: false,
+        dppDone: false,
+        revisions: []
       });
 
       saveTracker();
@@ -262,6 +310,53 @@
       subject.chapters = subject.chapters.filter(c => c.id !== chapterId);
       saveTracker();
       render();
+    }
+
+    function toggleChapter(weekId, subjectId, chapterId) {
+      const week = trackerData.weeks.find(w => w.id === weekId);
+      const subject = week.subjects.find(s => s.id === subjectId);
+      const chapter = subject.chapters.find(c => c.id === chapterId);
+      chapter.expanded = !chapter.expanded;
+      render();
+    }
+    function toggleLecture(weekId, subjectId, chapterId) {
+      const chapter = findChapter(weekId, subjectId, chapterId);
+      chapter.lectureDone = !chapter.lectureDone;
+      saveTracker();
+      render();
+    }
+
+    function toggleDpp(weekId, subjectId, chapterId) {
+      const chapter = findChapter(weekId, subjectId, chapterId);
+      chapter.dppDone = !chapter.dppDone;
+      saveTracker();
+      render();
+    }
+
+    function addRevision(weekId, subjectId, chapterId) {
+      const chapter = findChapter(weekId, subjectId, chapterId);
+      const revNum = chapter.revisions.length + 1;
+      chapter.revisions.push({
+        id: Date.now().toString(),
+        label: "Rev " + revNum,
+        done: false
+      });
+      saveTracker();
+      render();
+    }
+
+    function toggleRevision(weekId, subjectId, chapterId, revId) {
+      const chapter = findChapter(weekId, subjectId, chapterId);
+      const rev = chapter.revisions.find(r => r.id === revId);
+      rev.done = !rev.done;
+      saveTracker();
+      render();
+    }
+
+    function findChapter(weekId, subjectId, chapterId) {
+      const week = trackerData.weeks.find(w => w.id === weekId);
+      const subject = week.subjects.find(s => s.id === subjectId);
+      return subject.chapters.find(c => c.id === chapterId);
     }
     function render() {
       const container = document.getElementById("weeksContainer");
@@ -282,15 +377,52 @@
         week.subjects.forEach(subj => {
           let chaptersHtml = "";
           subj.chapters.forEach(chap => {
+            const chapArrow = chap.expanded ? "▼" : "▶";
+
+            let revisionsHtml = "";
+            chap.revisions.forEach(rev => {
+              revisionsHtml += `
+                <div class="taskRow ${rev.done ? 'done' : ''}">
+                  <span class="taskLabel">🔁 ${rev.label}</span>
+                  ${rev.done
+                    ? `<span class="doneTag" onclick="window.toggleRevision('${week.id}','${subj.id}','${chap.id}','${rev.id}')">Done ✅</span>`
+                    : `<span class="notDoneBtn" onclick="window.toggleRevision('${week.id}','${subj.id}','${chap.id}','${rev.id}')">Mark Done</span>`
+                  }
+                </div>
+              `;
+            });
+
+            const taskSection = chap.expanded ? `
+              <div class="taskRow ${chap.lectureDone ? 'done' : ''}">
+                <span class="taskLabel">🎥 Lecture</span>
+                ${chap.lectureDone
+                  ? `<span class="doneTag" onclick="window.toggleLecture('${week.id}','${subj.id}','${chap.id}')">Done ✅</span>`
+                  : `<span class="notDoneBtn" onclick="window.toggleLecture('${week.id}','${subj.id}','${chap.id}')">Mark Done</span>`
+                }
+              </div>
+              <div class="taskRow ${chap.dppDone ? 'done' : ''}">
+                <span class="taskLabel">📝 DPP</span>
+                ${chap.dppDone
+                  ? `<span class="doneTag" onclick="window.toggleDpp('${week.id}','${subj.id}','${chap.id}')">Done ✅</span>`
+                  : `<span class="notDoneBtn" onclick="window.toggleDpp('${week.id}','${subj.id}','${chap.id}')">Mark Done</span>`
+                }
+              </div>
+              ${revisionsHtml}
+              <button class="addRevBtn" onclick="window.addRevision('${week.id}','${subj.id}','${chap.id}')">+ Add Revision</button>
+            ` : "";
+
             chaptersHtml += `
-              <div class="chapterRow">
-                <span>📖 ${chap.name}</span>
-                <button class="delBtn" onclick="window.deleteChapter('${week.id}','${subj.id}','${chap.id}')">Remove</button>
+              <div class="chapterBlock">
+                <div class="chapterRow" onclick="window.toggleChapter('${week.id}','${subj.id}','${chap.id}')">
+                  <span>${chapArrow} 📖 ${chap.name}</span>
+                  <button class="delBtn" onclick="event.stopPropagation(); window.deleteChapter('${week.id}','${subj.id}','${chap.id}')">Remove</button>
+                </div>
+                ${taskSection}
               </div>
             `;
           });
 
-          const arrow = subj.expanded ? "▼" : "▶";
+          const subjArrow = subj.expanded ? "▼" : "▶";
           const chapterSection = subj.expanded ? `
             ${chaptersHtml}
             <div class="addChapterBox">
@@ -302,7 +434,7 @@
           subjectsHtml += `
             <div class="subjectBlock">
               <div class="subjectRow" onclick="window.toggleSubject('${week.id}','${subj.id}')">
-                <span>${arrow} 📘 ${subj.name}</span>
+                <span>${subjArrow} 📘 ${subj.name}</span>
                 <button class="delBtn" onclick="event.stopPropagation(); window.deleteSubject('${week.id}','${subj.id}')">Remove</button>
               </div>
               ${chapterSection}
@@ -332,6 +464,11 @@
     window.toggleSubject = toggleSubject;
     window.addChapter = addChapter;
     window.deleteChapter = deleteChapter;
+    window.toggleChapter = toggleChapter;
+    window.toggleLecture = toggleLecture;
+    window.toggleDpp = toggleDpp;
+    window.addRevision = addRevision;
+    window.toggleRevision = toggleRevision;
   </script>
 </body>
 </html>
