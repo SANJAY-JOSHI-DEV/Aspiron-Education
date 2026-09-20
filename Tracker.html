@@ -215,11 +215,24 @@
       if (docSnap.exists()) {
         trackerData = docSnap.data();
         if (!trackerData.weeks) trackerData.weeks = [];
+
+        trackerData.weeks.forEach(week => {
+          if (!week.subjects) week.subjects = [];
+          week.subjects.forEach(subj => {
+            if (subj.expanded === undefined) subj.expanded = false;
+            if (!subj.chapters) subj.chapters = [];
+            subj.chapters.forEach(chap => {
+              if (chap.expanded === undefined) chap.expanded = false;
+              if (chap.lectureDone === undefined) chap.lectureDone = false;
+              if (chap.dppDone === undefined) chap.dppDone = false;
+              if (!chap.revisions) chap.revisions = [];
+            });
+          });
+        });
       }
       render();
-    }
-
-    async function saveTracker() {
+      
+   async function saveTracker() {
       await setDoc(doc(db, "trackers", currentUser.uid), trackerData);
     }
     document.getElementById("addWeekBtn").addEventListener("click", () => {
