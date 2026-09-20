@@ -179,6 +179,7 @@
 
   <div id="weeksContainer"></div>
   <p class="empty" id="emptyMsg" style="display:none;">Koi week nahi bana abhi tak. Upar se add karo!</p>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -230,18 +231,18 @@
           });
         });
       }
-      try {render();
+      try {
+        render();
       } catch (err) {
-        document.getElementById("message").textContent = "ERROR: " + err.message;
+        document.getElementById("message").textContent = "LOAD ERROR: " + err.message;
         console.error(err);
       }
     }
 
     async function saveTracker() {
-      
-   async function saveTracker() {
       await setDoc(doc(db, "trackers", currentUser.uid), trackerData);
     }
+
     document.getElementById("addWeekBtn").addEventListener("click", () => {
       const input = document.getElementById("newWeekName");
       const name = input.value.trim();
@@ -304,6 +305,7 @@
       subject.expanded = !subject.expanded;
       render();
     }
+
     function addChapter(weekId, subjectId) {
       const input = document.getElementById("chapInput-" + weekId + "-" + subjectId);
       const name = input.value.trim();
@@ -339,6 +341,7 @@
       chapter.expanded = !chapter.expanded;
       render();
     }
+
     function toggleLecture(weekId, subjectId, chapterId) {
       const chapter = findChapter(weekId, subjectId, chapterId);
       chapter.lectureDone = !chapter.lectureDone;
@@ -378,6 +381,7 @@
       const subject = week.subjects.find(s => s.id === subjectId);
       return subject.chapters.find(c => c.id === chapterId);
     }
+
     function render() {
       const container = document.getElementById("weeksContainer");
       const emptyMsg = document.getElementById("emptyMsg");
@@ -401,78 +405,73 @@
 
             let revisionsHtml = "";
             chap.revisions.forEach(rev => {
-              revisionsHtml += `
-                <div class="taskRow ${rev.done ? 'done' : ''}">
-                  <span class="taskLabel">🔁 ${rev.label}</span>
-                  ${rev.done
-                    ? `<span class="doneTag" onclick="window.toggleRevision('${week.id}','${subj.id}','${chap.id}','${rev.id}')">Done ✅</span>`
-                    : `<span class="notDoneBtn" onclick="window.toggleRevision('${week.id}','${subj.id}','${chap.id}','${rev.id}')">Mark Done</span>`
-                  }
-                </div>
-              `;
+              revisionsHtml += "<div class=\"taskRow " + (rev.done ? "done" : "") + "\">" +
+                "<span class=\"taskLabel\">🔁 " + rev.label + "</span>" +
+                (rev.done
+                  ? "<span class=\"doneTag\" onclick=\"window.toggleRevision('" + week.id + "','" + subj.id + "','" + chap.id + "','" + rev.id + "')\">Done ✅</span>"
+                  : "<span class=\"notDoneBtn\" onclick=\"window.toggleRevision('" + week.id + "','" + subj.id + "','" + chap.id + "','" + rev.id + "')\">Mark Done</span>") +
+                "</div>";
             });
 
-            const taskSection = chap.expanded ? `
-              <div class="taskRow ${chap.lectureDone ? 'done' : ''}">
-                <span class="taskLabel">🎥 Lecture</span>
-                ${chap.lectureDone
-                  ? `<span class="doneTag" onclick="window.toggleLecture('${week.id}','${subj.id}','${chap.id}')">Done ✅</span>`
-                  : `<span class="notDoneBtn" onclick="window.toggleLecture('${week.id}','${subj.id}','${chap.id}')">Mark Done</span>`
-                }
-              </div>
-              <div class="taskRow ${chap.dppDone ? 'done' : ''}">
-                <span class="taskLabel">📝 DPP</span>
-                ${chap.dppDone
-                  ? `<span class="doneTag" onclick="window.toggleDpp('${week.id}','${subj.id}','${chap.id}')">Done ✅</span>`
-                  : `<span class="notDoneBtn" onclick="window.toggleDpp('${week.id}','${subj.id}','${chap.id}')">Mark Done</span>`
-                }
-              </div>
-              ${revisionsHtml}
-              <button class="addRevBtn" onclick="window.addRevision('${week.id}','${subj.id}','${chap.id}')">+ Add Revision</button>
-            ` : "";
+            let taskSection = "";
+            if (chap.expanded) {
+              taskSection =
+                "<div class=\"taskRow " + (chap.lectureDone ? "done" : "") + "\">" +
+                  "<span class=\"taskLabel\">🎥 Lecture</span>" +
+                  (chap.lectureDone
+                    ? "<span class=\"doneTag\" onclick=\"window.toggleLecture('" + week.id + "','" + subj.id + "','" + chap.id + "')\">Done ✅</span>"
+                    : "<span class=\"notDoneBtn\" onclick=\"window.toggleLecture('" + week.id + "','" + subj.id + "','" + chap.id + "')\">Mark Done</span>") +
+                "</div>" +
+                "<div class=\"taskRow " + (chap.dppDone ? "done" : "") + "\">" +
+                  "<span class=\"taskLabel\">📝 DPP</span>" +
+                  (chap.dppDone
+                    ? "<span class=\"doneTag\" onclick=\"window.toggleDpp('" + week.id + "','" + subj.id + "','" + chap.id + "')\">Done ✅</span>"
+                    : "<span class=\"notDoneBtn\" onclick=\"window.toggleDpp('" + week.id + "','" + subj.id + "','" + chap.id + "')\">Mark Done</span>") +
+                "</div>" +
+                revisionsHtml +
+                "<button class=\"addRevBtn\" onclick=\"window.addRevision('" + week.id + "','" + subj.id + "','" + chap.id + "')\">+ Add Revision</button>";
+            }
 
-            chaptersHtml += `
-              <div class="chapterBlock">
-                <div class="chapterRow" onclick="window.toggleChapter('${week.id}','${subj.id}','${chap.id}')">
-                  <span>${chapArrow} 📖 ${chap.name}</span>
-                  <button class="delBtn" onclick="event.stopPropagation(); window.deleteChapter('${week.id}','${subj.id}','${chap.id}')">Remove</button>
-                </div>
-                ${taskSection}
-              </div>
-            `;
+            chaptersHtml +=
+              "<div class=\"chapterBlock\">" +
+                "<div class=\"chapterRow\" onclick=\"window.toggleChapter('" + week.id + "','" + subj.id + "','" + chap.id + "')\">" +
+                  "<span>" + chapArrow + " 📖 " + chap.name + "</span>" +
+                  "<button class=\"delBtn\" onclick=\"event.stopPropagation(); window.deleteChapter('" + week.id + "','" + subj.id + "','" + chap.id + "')\">Remove</button>" +
+                "</div>" +
+                taskSection +
+              "</div>";
           });
 
           const subjArrow = subj.expanded ? "▼" : "▶";
-          const chapterSection = subj.expanded ? `
-            ${chaptersHtml}
-            <div class="addChapterBox">
-              <input type="text" id="chapInput-${week.id}-${subj.id}" placeholder="Chapter name">
-              <button onclick="window.addChapter('${week.id}','${subj.id}')">+ Add</button>
-            </div>
-          ` : "";
+          let chapterSection = "";
+          if (subj.expanded) {
+            chapterSection = chaptersHtml +
+              "<div class=\"addChapterBox\">" +
+                "<input type=\"text\" id=\"chapInput-" + week.id + "-" + subj.id + "\" placeholder=\"Chapter name\">" +
+                "<button onclick=\"window.addChapter('" + week.id + "','" + subj.id + "')\">+ Add</button>" +
+              "</div>";
+          }
 
-          subjectsHtml += `
-            <div class="subjectBlock">
-              <div class="subjectRow" onclick="window.toggleSubject('${week.id}','${subj.id}')">
-                <span>${subjArrow} 📘 ${subj.name}</span>
-                <button class="delBtn" onclick="event.stopPropagation(); window.deleteSubject('${week.id}','${subj.id}')">Remove</button>
-              </div>
-              ${chapterSection}
-            </div>
-          `;
+          subjectsHtml +=
+            "<div class=\"subjectBlock\">" +
+              "<div class=\"subjectRow\" onclick=\"window.toggleSubject('" + week.id + "','" + subj.id + "')\">" +
+                "<span>" + subjArrow + " 📘 " + subj.name + "</span>" +
+                "<button class=\"delBtn\" onclick=\"event.stopPropagation(); window.deleteSubject('" + week.id + "','" + subj.id + "')\">Remove</button>" +
+              "</div>" +
+              chapterSection +
+            "</div>";
         });
 
-        weekDiv.innerHTML = `
-          <div class="weekHeader">
-            <h3>${week.name}</h3>
-            <button class="delBtn" onclick="window.deleteWeek('${week.id}')">Delete Week</button>
-          </div>
-          ${subjectsHtml}
-          <div class="addSubjectBox">
-            <input type="text" id="subjInput-${week.id}" placeholder="Subject name (e.g. Physics)">
-            <button onclick="window.addSubject('${week.id}')">+ Add</button>
-          </div>
-        `;
+        weekDiv.innerHTML =
+          "<div class=\"weekHeader\">" +
+            "<h3>" + week.name + "</h3>" +
+            "<button class=\"delBtn\" onclick=\"window.deleteWeek('" + week.id + "')\">Delete Week</button>" +
+          "</div>" +
+          subjectsHtml +
+          "<div class=\"addSubjectBox\">" +
+            "<input type=\"text\" id=\"subjInput-" + week.id + "\" placeholder=\"Subject name (e.g. Physics)\">" +
+            "<button onclick=\"window.addSubject('" + week.id + "')\">+ Add</button>" +
+          "</div>";
 
         container.appendChild(weekDiv);
       });
