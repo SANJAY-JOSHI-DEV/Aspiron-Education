@@ -27,6 +27,52 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
+    .dashboard {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .overallRow {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .overallPct {
+      font-size: 2.2rem;
+      font-weight: bold;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .overallLabel {
+      font-size: 0.8rem;
+      color: #93c5fd;
+    }
+    .barOuter {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      height: 10px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .barInner {
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      height: 100%;
+      border-radius: 8px;
+    }
+    .weekProgressRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      margin-top: 10px;
+    }
+    .weekProgressRow .barOuter {
+      flex: 1;
+      margin: 0 10px;
+      height: 7px;
+    }
     .addWeekBox {
       display: flex;
       gap: 8px;
@@ -170,6 +216,15 @@
 <body>
   <a href="index.html" class="back">&larr; Back to Home</a>
   <h1>My Study Tracker</h1>
+
+  <div class="dashboard" id="dashboard" style="display:none;">
+    <div class="overallRow">
+      <div class="overallPct" id="overallPct">0%</div>
+      <div class="overallLabel">Overall Progress</div>
+      <div class="barOuter"><div class="barInner" id="overallBar" style="width:0%;"></div></div>
+    </div>
+    <div id="weekProgressList"></div>
+  </div>
 
   <div class="addWeekBox">
     <input type="text" id="newWeekName" placeholder="e.g. Week 1">
@@ -382,10 +437,61 @@
       return subject.chapters.find(c => c.id === chapterId);
     }
 
+    function calcWeekProgress(week) {
+      let total = 0;
+      let done = 0;
+      week.subjects.forEach(subj => {
+        subj.chapters.forEach(chap => {
+          total += 2 + chap.revisions.length;
+          if (chap.lectureDone) done += 1;
+          if (chap.dppDone) done += 1;
+          chap.revisions.forEach(rev => {
+            if (rev.done) done += 1;
+          });
+        });
+      });
+      return { total: total, done: done };
+    }
+
+    function updateDashboard() {
+      const dashboard = document.getElementById("dashboard");
+      const weekList = document.getElementById("weekProgressList");
+
+      if (trackerData.weeks.length === 0) {
+        dashboard.style.display = "none";
+        return;
+      }
+      dashboard.style.display = "block";
+
+      let grandTotal = 0;
+      let grandDone = 0;
+      let weekRowsHtml = "";
+
+      trackerData.weeks.forEach(week => {
+        const prog = calcWeekProgress(week);
+        grandTotal += prog.total;
+        grandDone += prog.done;
+        const pct = prog.total === 0 ? 0 : Math.round((prog.done / prog.total) * 100);
+
+        weekRowsHtml += "<div class=\"weekProgressRow\">" +
+          "<span>" + week.name + "</span>" +
+          "<div class=\"barOuter\"><div class=\"barInner\" style=\"width:" + pct + "%;\"></div></div>" +
+          "<span>" + pct + "%</span>" +
+          "</div>";
+      });
+
+      const overallPct = grandTotal === 0 ? 0 : Math.round((grandDone / grandTotal) * 100);
+      document.getElementById("overallPct").textContent = overallPct + "%";
+      document.getElementById("overallBar").style.width = overallPct + "%";
+      weekList.innerHTML = weekRowsHtml;
+    }
+
     function render() {
       const container = document.getElementById("weeksContainer");
       const emptyMsg = document.getElementById("emptyMsg");
       container.innerHTML = "";
+
+      updateDashboard();
 
       if (trackerData.weeks.length === 0) {
         emptyMsg.style.display = "block";
