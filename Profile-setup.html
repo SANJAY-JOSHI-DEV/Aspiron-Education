@@ -115,4 +115,67 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getA
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+      } else {
+        document.getElementById("message").textContent = "Pehle login karo";
+        document.getElementById("message").style.color = "#f87171";
+      }
+    });
+
+    document.getElementById("examType").addEventListener("change", (e) => {
+      document.getElementById("customExamBox").style.display =
+        e.target.value === "Other" ? "block" : "none";
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      const message = document.getElementById("message");
+      const fullName = document.getElementById("fullName").value;
+      const mobile = document.getElementById("mobile").value;
+      const city = document.getElementById("city").value;
+      const examType = document.getElementById("examType").value;
+      const customExamName = document.getElementById("customExamName").value;
+
+      if (!fullName || !mobile || !city || !examType) {
+        message.style.color = "#f87171";
+        message.textContent = "Sabhi fields bharo";
+        return;
+      }
+      if (examType === "Other" && !customExamName) {
+        message.style.color = "#f87171";
+        message.textContent = "Exam ka naam likho";
+        return;
+      }
+      if (!currentUser) {
+        message.style.color = "#f87171";
+        message.textContent = "Pehle login karo";
+        return;
+      }
+
+      const finalExamName = examType === "Other" ? customExamName : examType;
+
+      try {
+        await setDoc(doc(db, "profiles", currentUser.uid), {
+          fullName: fullName,
+          mobile: mobile,
+          city: city,
+          examType: finalExamName
+        });
+
+        message.style.color = "#4ade80";
+        message.textContent = "Profile saved! Redirecting...";
+        setTimeout(() => window.location.href = "countdown.html", 1000);
+      } catch (error) {
+        message.style.color = "#f87171";
+        message.textContent = "Error: " + error.message;
+      }
+    });
+  </script>
+</body>
+</html>
