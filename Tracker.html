@@ -122,7 +122,6 @@
 
   <div id="weeksContainer"></div>
   <p class="empty" id="emptyMsg" style="display:none;">Koi week nahi bana abhi tak. Upar se add karo!</p>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -166,38 +165,3 @@
     async function saveTracker() {
       await setDoc(doc(db, "trackers", currentUser.uid), trackerData);
     }
-
-    document.getElementById("addWeekBtn").addEventListener("click", () => {
-      const input = document.getElementById("newWeekName");
-      const name = input.value.trim();
-      const message = document.getElementById("message");
-
-      if (!name) {
-        message.textContent = "Week ka naam likho";
-        return;
-      }
-      if (!currentUser) {
-        message.textContent = "Pehle login karo";
-        return;
-      }
-
-      trackerData.weeks.push({
-        id: Date.now().toString(),
-        name: name,
-        subjects: []
-      });
-
-      input.value = "";
-      message.textContent = "";
-      saveTracker();
-      render();
-    });
-
-    function addSubject(weekId) {
-      const input = document.getElementById("subjInput-" + weekId);
-      const name = input.value.trim();
-      if (!name) return;
-
-      const week = trackerData.weeks.find(w => w.id === weekId);
-      week.subjects.push({
-        id: D
